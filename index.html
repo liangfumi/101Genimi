@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>台北101 日文導覽冒險遊戲</title>
+    <style>
+        :root {
+            --primary-color: #006643;
+            --primary-light: #e6f4ea;
+            --accent-color: #c0392b;
+            --bg-color: #f4f7f6;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --shadow: 0 8px 20px rgba(0,0,0,0.08);
+            --border-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "MS Gothic", "MS Mincho", "Hiragino Sans", "Meiryo", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        @media (min-width: 481px) {
+            #app {
+                border-radius: var(--border-radius);
+                height: 90vh;
+            }
+        }
+
+        /* 頂部導航列 */
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .header .score-board {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+        }
+
+        /* 畫面容器 */
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 按鈕與互動元素 */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 102, 67, 0.3);
+            transition: all 0.2s ease;
+            text-align: center;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(0, 102, 67, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #7f8c8d;
+            box-shadow: 0 4px 12px rgba(127, 140, 141, 0.3);
+            margin-top: 10px;
+        }
+
+        /* 首頁畫面 */
+        .welcome-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #e6f4ea 0%, #ffffff 100%);
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .welcome-subtitle {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .tower-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-15px);}
+            60% {transform: translateY(-7px);}
+        }
+
+        /* 導覽資訊畫面 */
+        .intro-card {
+            background: var(--primary-light);
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .vocab-box {
+            background: #fff9e6;
+            border: 1px dashed #f39c12;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .vocab-box h4 {
+            color: #d35400;
+            margin-bottom: 5px;
+        }
+
+        /* 測驗題目畫面 */
+        .question-counter {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background-color: white;
+            color: var(--text-color);
+            border: 2px solid #e0e0e0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            background-color: var(--primary-light);
+        }
+
+        .option-btn.correct {
+            background-color: #2ecc71 !important;
+            color: white !important;
+            border-color: #27ae60 !important;
+        }
+
+        .option-btn.wrong {
+            background-color: #e74c3c !important;
+            color: white !important;
+            border-color: #c0392b !important;
+        }
+
+        /* 回饋對話框 / 提示 */
+        .feedback-area {
+            margin-top: auto;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback-area.correct-fb {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback-area.wrong-fb {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* 遊戲結束畫面 */
+        .result-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .result-score {
+            font-size: 3rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .badge {
+            font-size: 1.2rem;
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        ruby rt {
+            font-size: 0.65rem;
+            color: var(--primary-color);
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- 頂部導航 -->
+    <div class="header">
+        <span><ruby>台北<rt>たいぺい</rt></ruby>101 <ruby>冒険<rt>ぼうけん</rt></ruby></span>
+        <div class="score-board" id="scoreDisplay">スコア: 0</div>
+    </div>
+
+    <!-- 1. 開始畫面 (Welcome Screen) -->
+    <div id="screen-welcome" class="screen active welcome-screen">
+        <div class="tower-icon">🏢✨</div>
+        <h1 class="welcome-title"><ruby>台北<rt>たいぺい</rt></ruby>101<br><ruby>日本語<rt>にほんご</rt></ruby>ガイド</h1>
+        <p class="welcome-subtitle"><ruby>準備好你的創意護照與行動行囊<br>一起來挑戰台北101日文導覽闖關遊戲！</ruby></p>
+        <button class="btn" onclick="startGame()">ゲームスタート (開始遊戲)</button>
+    </div>
+
+    <!-- 2. 導覽解說畫面 (Guide Screen) -->
+    <div id="screen-guide" class="screen">
+        <h2 style="color: var(--primary-color); margin-bottom: 12px;"><ruby>スポット紹介<rt>しょうかい</rt></ruby>：台北101</h2>
+        <div class="intro-card">
+            <p><strong><ruby>台北<rt>たいぺい</rt></ruby>101</strong>は、<ruby>台湾<rt>たいわん</rt></ruby>の<ruby>首都<rt>しゅと</rt></ruby>にある<ruby>超高層<rt>ちょうこうそう</rt></ruby>ビルです。かつては<ruby>世界一<rt>せかいいち</rt></ruby>の<ruby>高<rt>たか</rt></ruby>さを<ruby>誇<rt>ほこ</rt></ruby>っていました。</p>
+            <p style="margin-top: 8px;"><ruby>竹<rt>たけ</rt></ruby>の<ruby>節<rt>ふし</rt></ruby>をモチーフにした<ruby>独特<rt>どくとく</rt></ruby>なデザインで、<ruby>強風<rt>きょうふう</rt></ruby>や<ruby>地震<rt>じしん</rt></ruby>に<ruby>耐<rt>た</rt></ruby>える「チューンド・マス・ダンパー」という<ruby>巨大<rt>きょだい</rt></ruby>な<ruby>重<rt>おも</rt></ruby>りが<ruby>特徴<rt>とくちょう</rt></ruby>です。</p>
+        </div>
+
+        <div class="vocab-box">
+            <h4>💡 <ruby>重要単語<rt>じゅうようたんご</rt></ruby> (重要單字)</h4>
+            <p>・<strong><ruby>超高層<rt>ちょうこうそう</rt></ruby>ビル</strong> (chōkōsō biru)：超高層大樓</p>
+            <p>・<strong><ruby>独特<rt>どくとく</rt></ruby></strong> (dokutoku)：獨特</p>
+            <p>・<strong><ruby>地震<rt>じしん</rt></ruby></strong> (jishin)：地震</p>
+            <p>・<strong><ruby>展望台<rt>てんぼうだい</rt></ruby></strong> (tenbōdai)：觀景台</p>
+        </div>
+
+        <button class="btn" onclick="nextStageFromGuide()">クイズへ進む (進入測驗)</button>
+    </div>
+
+    <!-- 3. 遊戲進行 / 互動測驗畫面 (Quiz Screen) -->
+    <div id="screen-quiz" class="screen">
+        <div class="question-counter" id="questionCounter">Question 1 / 5</div>
+        <div class="question-text" id="questionText">載入中...</div>
+        
+        <div class="options-list" id="optionsList">
+            <!-- 選項動態生成 -->
+        </div>
+
+        <div class="feedback-area" id="feedbackArea">
+            <!-- 回答回饋與解說 -->
+        </div>
+
+        <button class="btn" id="nextButton" style="display: none;" onclick="nextQuestion()">次へ (下一題)</button>
+    </div>
+
+    <!-- 4. 遊戲結束畫面 (Result Screen) -->
+    <div id="screen-result" class="screen result-screen">
+        <div style="font-size: 3.5rem;">🎉</div>
+        <h2 style="color: var(--primary-color);"><ruby>ゲームクリア<rt>くりあ</rt></ruby>！</h2>
+        <p style="color: #666; margin-top: 5px;"><ruby>お疲れ様でした！あなたのスコアは...</ruby></p>
+        
+        <div class="result-score" id="finalScore">100 pt</div>
+        <div class="badge" id="resultBadge">🌟 台北101マスター</div>
+
+        <p style="font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; color: #444;" id="resultComment">
+            素晴らしい！あなたは完璧な台北101の知識を持っています！
+        </p>
+
+        <button class="btn" onclick="restartGame()">もう一度プレイ (重新挑戰)</button>
+        <button class="btn btn-secondary" onclick="backToWelcome()">ホームに戻る (回到首頁)</button>
+    </div>
+</div>
+
+<script>
+    // 簡單的 Web Audio API 提示音效產生器
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        } else if (type === 'wrong') {
+            osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.15); // 低音
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.35);
+        } else if (type === 'click') {
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+    }
+
+    // 測驗題庫資料 (對應台北101景點與日文學習)
+    const quizData = [
+        {
+            question: "台北101の建物は、どんな植物をモチーフにデザインされていますか？",
+            options: [
+                "梅の花 (うめのはな)",
+                "竹の節 (たけのふし)",
+                "ヤシの木 (やしのき)"
+            ],
+            answer: 1,
+            explanation: "正解は「竹の節」です。成長や節度を象徴する竹の形をデザインに取り入れています。"
+        },
+        {
+            question: "強風や地震の揺れを抑えるためにビルの中にある巨大な球体は、日本語で何と呼ばれますか？",
+            options: [
+                "チューンド・マス・ダンパー",
+                "マジック・ボール",
+                "バランス・アイランド"
+            ],
+            answer: 0,
+            explanation: "正解は「チューンド・マス・ダンパー」です。巨大な重りで建物の揺れを軽減します。"
+        },
+        {
+            question: "「展望台」の正しい読み方はどれですか？",
+            options: [
+                "てんぼうだい (tenbōdai)",
+                "けんぼうだい (kenbōdai)",
+                "てんこうだい (tenkōdai)"
+            ],
+            answer: 0,
+            explanation: "正解は「てんぼうだい（展望台）」です。高いところから景色を見渡す場所のことです。"
+        },
+        {
+            question: "台北101の高さは何メートルですか？（屋根までの高さではなく構造上の高さ）",
+            options: [
+                "約 300 メートル",
+                "約 508 メートル",
+                "約 828 メートル"
+            ],
+            answer: 1,
+            explanation: "正解は「約 508 メートル」です。完成当時は世界一の高さを誇りました。"
+        },
+        {
+            question: "「地震（じしん）」に関する説明として正しいものはどれですか？",
+            options: [
+                "天気が大荒れになる現象",
+                "地面が揺れる自然災害",
+                "ビルのエレベーターの速度"
+            ],
+            answer: 1,
+            explanation: "正解は「地面が揺れる自然災害」です。台湾や日本でよく発生します。"
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let isAnswered = false;
+
+    // 切換畫面函式
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // 開始遊戲
+    function startGame() {
+        playSound('click');
+        score = 0;
+        document.getElementById('scoreDisplay').innerText = `スコア: ${score}`;
+        showScreen('screen-guide');
+    }
+
+    // 從導覽進入測驗
+    function nextStageFromGuide() {
+        playSound('click');
+        currentQuestionIndex = 0;
+        showScreen('screen-quiz');
+        loadQuestion();
+    }
+
+    // 載入題目
+    function loadQuestion() {
+        isAnswered = false;
+        const q = quizData[currentQuestionIndex];
+        document.getElementById('questionCounter').innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+        document.getElementById('questionText').innerHTML = q.question;
+        
+        const optionsList = document.getElementById('optionsList');
+        optionsList.innerHTML = '';
+
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = opt;
+            btn.onclick = () => selectOption(index);
+            optionsList.appendChild(btn);
+        });
+
+        const feedbackArea = document.getElementById('feedbackArea');
+        feedbackArea.style.display = 'none';
+        document.getElementById('nextButton').style.display = 'none';
+    }
+
+    // 選擇答案
+    function selectOption(selectedIndex) {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        const q = quizData[currentQuestionIndex];
+        const optionButtons = document.querySelectorAll('.option-btn');
+        const feedbackArea = document.getElementById('feedbackArea');
+
+        optionButtons.forEach((btn, idx) => {
+            btn.style.cursor = 'default';
+            if (idx === q.answer) {
+                btn.classList.add('correct');
+            } else if (idx === selectedIndex) {
+                btn.classList.add('wrong');
+            }
+        });
+
+        if (selectedIndex === q.answer) {
+            playSound('correct');
+            score += 20;
+            document.getElementById('scoreDisplay').innerText = `スコア: ${score}`;
+            feedbackArea.className = 'feedback-area correct-fb';
+            feedbackArea.innerHTML = `<strong>⭕ 正解！ (答對了！)</strong><br>${q.explanation}`;
+        } else {
+            playSound('wrong');
+            feedbackArea.className = 'feedback-area wrong-fb';
+            feedbackArea.innerHTML = `<strong>❌ 残念！ (答錯了！)</strong><br>${q.explanation}`;
+        }
+
+        feedbackArea.style.display = 'block';
+        document.getElementById('nextButton').style.display = 'block';
+    }
+
+    // 下一題
+    function nextQuestion() {
+        playSound('click');
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    // 顯示結算畫面
+    function showResult() {
+        showScreen('screen-result');
+        document.getElementById('finalScore').innerText = `${score} pt`;
+        
+        const badge = document.getElementById('resultBadge');
+        const comment = document.getElementById('resultComment');
+
+        if (score === 100) {
+            badge.innerText = "🌟 台北101マスター (完美通關)";
+            comment.innerText = "素晴らしい！あなたは完璧な台北101の知識と日語理解力を持っています！";
+        } else if (score >= 60) {
+            badge.innerText = "👏 よくできました (表現優異)";
+            comment.innerText = "お疲れ様でした！台北101についてかなり詳しくなりましたね。";
+        } else {
+            badge.innerText = "💪 もう一度挑戦 (再接再厲)";
+            comment.innerText = "惜しかったですね！ガイドをもう一度読んで、満点を目指しましょう！";
+        }
+    }
+
+    // 重新開始
+    function restartGame() {
+        playSound('click');
+        startGame();
+    }
+
+    // 回到首頁
+    function backToWelcome() {
+        playSound('click');
+        showScreen('screen-welcome');
+    }
+</script>
+
+</body>
+</html>
